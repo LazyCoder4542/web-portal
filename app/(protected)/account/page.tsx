@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import { backend, getAccessToken, authHeaders } from "@/lib/backend";
 import type { User } from "@/lib/types";
-import { Calendar, Mail, Github, ShieldCheck } from "lucide-react";
+import { Calendar, Mail, ShieldCheck } from "lucide-react";
+
+function GithubIcon({ size = 15, className }: { size?: number; className?: string }) {
+  return <img src="/github.svg" width={size} height={size} className={className} alt="" />;
+}
 import LogoutButton from "./logout-button";
 
 function Field({
@@ -84,7 +88,7 @@ export default async function AccountPage() {
         </div>
 
         <div className="px-7">
-          <Field icon={Github} label="GitHub ID" value={user.github_id} />
+          <Field icon={GithubIcon} label="GitHub ID" value={user.github_id} />
           <Field icon={Mail} label="Email" value={user.email} />
           <Field
             icon={ShieldCheck}
