@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Insighta Web Portal
+
+A Next.js web portal for browsing and managing profiles enriched with predicted gender, age, and nationality data. Authentication is handled via GitHub OAuth.
+
+## Features
+
+- GitHub OAuth login
+- Dashboard with profile statistics
+- Profiles list with filters (gender, age group) and pagination
+- Profile detail view with prediction confidence indicators
+- Natural-language profile search
+- CSV export
+- Account management
+- Role-based access (admin / analyst)
+
+## Tech Stack
+
+- **Framework** — Next.js 16 (App Router)
+- **Styling** — Tailwind CSS v4
+- **HTTP** — Axios
+- **Auth** — GitHub OAuth via HTTP-only cookies (BFF pattern)
+- **CI** — GitHub Actions (lint + build on PR)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js 20+
+- The [Insighta API](https://github.com/hng14) running locally or deployed
+
+### Environment
+
+Create a `.env.local` file at the project root:
+
+```env
+BACKEND_URL=http://localhost:3000/api
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> `BACKEND_URL` is server-only — never expose it with a `NEXT_PUBLIC_` prefix.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Install & run
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+app/
+  (protected)/        # Auth-gated pages (dashboard, profiles, search, account)
+  api/                # BFF route handlers — proxy to backend, manage cookies
+  callback/           # OAuth callback handler
+  login/              # Login page
+lib/
+  axios.ts            # Client-side axios instances (public + private with refresh)
+  backend.ts          # Server-only axios instance + cookie helpers
+  types.ts            # Shared TypeScript types
+components/
+  sidebar.tsx         # Navigation sidebar
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Authentication Flow
 
-## Deploy on Vercel
+1. User clicks **Continue with GitHub** → redirected to `/api/auth/login`
+2. Backend handles the GitHub OAuth dance and redirects to `/callback?code=...`
+3. Next.js exchanges the code for tokens via the backend and stores them as HTTP-only cookies
+4. All subsequent API calls go through Next.js BFF route handlers — tokens never touch client JS
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run lint` | Run ESLint |
+
+## CI
+
+GitHub Actions runs on every PR to `main`:
+- ESLint
+- `next build`
