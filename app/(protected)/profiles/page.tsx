@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal, Download } from "lucide-react";
 import { privateApi } from "@/lib/axios";
 import type { Profile, Gender, AgeGroup, PaginatedResponse } from "@/lib/types";
 
@@ -32,6 +32,7 @@ export default function ProfilesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     gender: "",
     age_group: "",
@@ -68,6 +69,33 @@ export default function ProfilesPage() {
   useEffect(() => {
     fetchProfiles(page, filters);
   }, [page, filters, fetchProfiles]);
+
+  async function handleExportCsv() {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams({ format: "csv", order: filters.order });
+      if (filters.gender) params.set("gender", filters.gender);
+      if (filters.age_group) params.set("age_group", filters.age_group);
+      if (filters.sort_by) params.set("sort_by", filters.sort_by);
+
+      const response = await fetch(`/api/profiles/export?${params}`, { credentials: "include" });
+      if (!response.ok) throw new Error("Export failed");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "profiles.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      // silent — user sees no download
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function applyFilter<K extends keyof Filters>(key: K, value: Filters[K]) {
     setPage(1);
@@ -133,6 +161,14 @@ export default function ProfilesPage() {
         </div>
 
         <div className="flex items-center gap-1.5 ml-auto">
+          <button
+            onClick={handleExportCsv}
+            disabled={exporting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download size={13} />
+            {exporting ? "Exporting…" : "Export CSV"}
+          </button>
           <span className="text-xs text-neutral-400">Sort</span>
           <select
             value={filters.sort_by}
