@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { backend, getAccessToken, authHeaders } from "@/lib/backend";
-import type { Profile } from "@/lib/types";
+import type { Profile, User } from "@/lib/types";
 import { ArrowLeft, Calendar } from "lucide-react";
+import DeleteProfileButton from "./delete-button";
 
 const genderColor: Record<string, string> = {
   male: "bg-blue-50 text-blue-700 border-blue-100",
@@ -52,11 +53,14 @@ export default async function ProfileDetailPage({
   const { id } = await params;
 
   let profile: Profile;
+  let isAdmin = false;
   try {
-    const { data } = await backend.get<{ status: string } & Profile>(`/profiles/${id}`, {
-      headers: authHeaders(token),
-    });
-    profile = data;
+    const [profileRes, userRes] = await Promise.all([
+      backend.get<{ status: string } & Profile>(`/profiles/${id}`, { headers: authHeaders(token) }),
+      backend.get<User>("/users/me", { headers: authHeaders(token) }),
+    ]);
+    profile = profileRes.data;
+    isAdmin = userRes.data.role === "admin";
   } catch {
     redirect("/profiles");
   }
@@ -78,9 +82,10 @@ export default async function ProfileDetailPage({
 
       <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
         <div className="px-7 py-7 border-b border-neutral-100">
-          <h1 className="text-2xl font-bold text-neutral-900 mb-3">
-            {profile.name}
-          </h1>
+          <div className="flex items-start justify-between mb-3">
+            <h1 className="text-2xl font-bold text-neutral-900">{profile.name}</h1>
+            {isAdmin && <DeleteProfileButton id={profile.id} />}
+          </div>
           <div className="flex flex-wrap gap-2">
             <span
               className={`inline-flex text-xs font-medium px-2.5 py-1 rounded-full border ${genderColor[profile.gender]}`}
