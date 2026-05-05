@@ -8,6 +8,7 @@ import {
   Search,
   UserCircle,
   LogOut,
+  Upload,
 } from "lucide-react";
 import type { User } from "@/lib/types";
 
@@ -53,6 +54,19 @@ export default function Sidebar({ user }: { user: User }) {
             </Link>
           );
         })}
+        {user.role === "admin" && (
+          <Link
+            href="/profiles/upload"
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              pathname === "/profiles/upload"
+                ? "bg-blue-50 text-blue-600"
+                : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+            }`}
+          >
+            <Upload size={16} strokeWidth={1.75} />
+            Upload CSV
+          </Link>
+        )}
       </nav>
 
       <div className="px-3 pb-4 space-y-0.5">

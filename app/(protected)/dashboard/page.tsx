@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import axios from "axios";
 import { backend, getAccessToken, authHeaders } from "@/lib/backend";
 import type { Profile, User, PaginatedResponse } from "@/lib/types";
 import { Users, TrendingUp, Globe, Calendar } from "lucide-react";
@@ -34,18 +35,24 @@ export default async function DashboardPage() {
   let profiles: Profile[] = [];
   let user: User | null = null;
 
-  try {
-    const [profilesRes, userRes] = await Promise.all([
-      backend.get<PaginatedResponse<Profile>>("/profiles", {
-        headers: authHeaders(token),
-        params: { limit: 50 },
-      }),
-      backend.get<User>("/users/me", { headers: authHeaders(token) }),
-    ]);
-    profiles = profilesRes.data.data;
-    user = userRes.data;
-  } catch {
-    redirect("/api/auth/clear");
+  const [profilesResult, userResult] = await Promise.allSettled([
+    backend.get<PaginatedResponse<Profile>>("/profiles", {
+      headers: authHeaders(token),
+      params: { limit: 50 },
+    }),
+    backend.get<User>("/users/me", { headers: authHeaders(token) }),
+  ]);
+
+  if (userResult.status === "rejected") {
+    if (axios.isAxiosError(userResult.reason) && userResult.reason.response?.status === 401) {
+      redirect("/api/auth/clear");
+    }
+  } else {
+    user = userResult.value.data;
+  }
+
+  if (profilesResult.status === "fulfilled") {
+    profiles = profilesResult.value.data.data;
   }
 
   const total = profiles.length;

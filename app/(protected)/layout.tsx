@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import axios from "axios";
 import { backend, getAccessToken, authHeaders } from "@/lib/backend";
 import Sidebar from "@/components/sidebar";
 import type { User } from "@/lib/types";
@@ -17,8 +18,11 @@ export default async function ProtectedLayout({
       headers: authHeaders(token),
     });
     user = data;
-  } catch {
-    redirect("/api/auth/clear");
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 401) {
+      redirect("/api/auth/clear");
+    }
+    throw err;
   }
 
   return (

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 export default function CallbackClient() {
   const params = useSearchParams();
-  const router = useRouter();
   const hasRun = useRef(false);
   const [errorDetail, setErrorDetail] = useState("");
 
@@ -19,7 +18,7 @@ export default function CallbackClient() {
 
     if (!code) {
       console.error("[callback] No code in URL params");
-      router.replace("/login?error=1");
+      window.location.replace("/login?error=1");
       return;
     }
 
@@ -29,7 +28,10 @@ export default function CallbackClient() {
       .then(async (res) => {
         if (res.ok) {
           console.log("[callback] Exchange succeeded, redirecting to dashboard");
-          router.replace("/dashboard");
+          // Hard navigation so the browser sends the freshly-set HTTP-only cookies
+          // with the first request to the dashboard — soft navigation (router.replace)
+          // can race against the Set-Cookie flush and leave the user stuck on this page.
+          window.location.replace("/dashboard");
         } else {
           const body = await res.text().catch(() => "");
           console.error("[callback] Exchange failed", res.status, body);
@@ -40,7 +42,7 @@ export default function CallbackClient() {
         console.error("[callback] Network error", err);
         setErrorDetail(String(err));
       });
-  }, [params, router]);
+  }, [params]);
 
   if (errorDetail) {
     return (

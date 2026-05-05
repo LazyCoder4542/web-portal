@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import axios from "axios";
 import { backend, getAccessToken, authHeaders } from "@/lib/backend";
 import type { User } from "@/lib/types";
 import { Calendar, Mail, ShieldCheck } from "lucide-react";
@@ -38,8 +39,11 @@ export default async function AccountPage() {
       headers: authHeaders(token),
     });
     user = data;
-  } catch {
-    redirect("/api/auth/clear");
+  } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 401) {
+      redirect("/api/auth/clear");
+    }
+    throw err;
   }
 
   const joined = new Date(user.created_at).toLocaleDateString("en-GB", {
