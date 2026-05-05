@@ -39,7 +39,7 @@ export default async function AccountPage() {
     });
     user = data;
   } catch {
-    redirect("/login");
+    redirect("/api/auth/clear");
   }
 
   const joined = new Date(user.created_at).toLocaleDateString("en-GB", {

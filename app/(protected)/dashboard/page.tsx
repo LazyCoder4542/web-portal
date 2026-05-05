@@ -45,7 +45,7 @@ export default async function DashboardPage() {
     profiles = profilesRes.data.data;
     user = userRes.data;
   } catch {
-    redirect("/login");
+    redirect("/api/auth/clear");
   }
 
   const total = profiles.length;

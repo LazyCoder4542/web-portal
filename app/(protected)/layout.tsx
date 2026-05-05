@@ -18,7 +18,7 @@ export default async function ProtectedLayout({
     });
     user = data;
   } catch {
-    redirect("/login");
+    redirect("/api/auth/clear");
   }
 
   return (
